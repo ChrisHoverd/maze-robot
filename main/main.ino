@@ -13,19 +13,19 @@ CytronMD motor1(PWM_DIR, 5, 4); // Motor 1 EN = Pin 5, DIR = 4
 CytronMD motor2(PWM_DIR, 6, 7); // Motor 2 EN = Pin 6, Dir = 7
 
 void setup() {
-  // setup code runs once at the begining of the program
+  // setup code runs once at the beginning of the program
   Serial.begin(9600);
 
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-    motor1.setSpeed(128);   // Motor 1 runs forward at 50% speed.
-    motor2.setSpeed(-128);  // Motor 2 runs backward at 50% speed.
-  delay(1000);
+    motor1.setSpeed(200);   // Motor 1 runs forward at 50% speed.
+    motor2.setSpeed(200);  // Motor 2 runs backward at 50% speed.
+  delay(3000);
   
-  motor1.setSpeed(255);   // Motor 1 runs forward at full speed.
-  motor2.setSpeed(-255);  // Motor 2 runs backward at full speed.
-  delay(1000);
+  motor1.setSpeed(-200);   // Motor 1 runs forward at full speed.
+  motor2.setSpeed(-200);  // Motor 2 runs backward at full speed.
+  delay(3000);
 }
 
