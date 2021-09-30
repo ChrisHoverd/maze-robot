@@ -21,6 +21,7 @@
 
 //include motor driver library
 #include "CytronMotorDriver.h" 
+#include "Encoder.h"
 
 // declare encoder input pins
 // motor 1 and motor 2 are the right and left motors respectively, as seen from above with nose wheel in the front
@@ -28,6 +29,10 @@ const int m1_ch_A = 2;
 const int m1_ch_B = 3;
 const int m2_ch_A = 18;
 const int m2_ch_B = 19;
+
+//instantiate the encoder objects
+Encoder m1_Enc(m1_ch_A, m1_ch_B);
+Encoder m2_Enc(m2_ch_A, m2_ch_B);
 
 //declare motor directions, ie. CW or CCW
 String m1_direction = "";
@@ -37,13 +42,12 @@ String m2_direction = "";
 int m1_PWM;
 int m2_PWM;
 
-//declare encoder state and counter variables
+//declare encoder counter variables
 volatile int m1_counter = 0;
-volatile int m1_current_state_ch_A;
-volatile int m1_current_state_ch_B;
 volatile int m2_counter = 0;
-volatile int m2_current_state_ch_A;
-volatile int m2_current_state_ch_B;
+
+
+volatile long new_position;
 
 //instantiate the motor objects
 CytronMD motor1(PWM_DIR, 5, 4); // Motor 1 EN = Pin 5, DIR = 4
@@ -53,10 +57,10 @@ void setup() {
   // setup code runs once at the beginning of the program
 
   //declare encoder pins as inputs
-  pinMode (m1_ch_A, INPUT);
-  pinMode (m1_ch_B, INPUT);
-  pinMode (m2_ch_A, INPUT);
-  pinMode (m2_ch_B, INPUT);
+  pinMode (m1_ch_A, INPUT_PULLUP);
+  pinMode (m1_ch_B, INPUT_PULLUP);
+  pinMode (m2_ch_A, INPUT_PULLUP);
+  pinMode (m2_ch_B, INPUT_PULLUP);
   
   //sets the data rate in bits per second (baud)
   Serial.begin(9600);
@@ -66,12 +70,19 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
-  motor1.setSpeed(200);   // Motor 1 runs forward at 50% speed.
-  motor2.setSpeed(200);  // Motor 2 runs backward at 50% speed.
+  motor1.setSpeed(100);   // Motor 1 runs forward at 50% speed.
+  motor2.setSpeed(100);  // Motor 2 runs backward at 50% speed.
   delay(3000);
+  new_position = m1_Enc.read();
+  Serial.print("M1 Counter: ");
+  Serial.println(new_position);
   
-  motor1.setSpeed(-200);   // Motor 1 runs forward at full speed.
-  motor2.setSpeed(-200);  // Motor 2 runs backward at full speed.
+  motor1.setSpeed(-100);   // Motor 1 runs forward at full speed.
+  motor2.setSpeed(-100);  // Motor 2 runs backward at full speed.
   delay(3000);
+
+  new_position = m1_Enc.read();
+  Serial.print("M1 Counter: ");
+  Serial.println(new_position);
 }
 
