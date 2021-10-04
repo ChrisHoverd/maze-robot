@@ -33,11 +33,10 @@ const int m2_ch_B = 19;
 
 //declare ir values
 int left_ir_pin = A0;
-int left_ir_val = 0;
+int front_ir_pin = A1;
 float sensor_sample = 10;
-float left_ir_sum = 0;
-float left_ir_average_val = 0;
 float left_ir_distance = 0;
+float front_ir_distance =0;
 
 //declare mm/pulse constant
 //converts encoder ticks to mm
@@ -89,6 +88,9 @@ void setup() {
   //sets the reference voltage for the analog inputs, ie. 3.3V from the arduino for the IR sensors
   analogReference(EXTERNAL);
 
+  Timer3.initialize(50000); // 50 millisecond interrupt timer
+  Timer3.attachInterrupt(timerInterrupt); //calls timerInterrupt every 50 milliseconds
+  
   //sets the data rate in bits per second (baud)
   Serial.begin(9600);
 
@@ -125,19 +127,40 @@ void loop() {
   delay(100000);
 }
 
-void leftIRCalc()
-{
-    for(int i = 0; i<sensor_sample; ++i)
-  {
-    left_ir_sum+= analogRead(left_ir_pin);
-  }
+// void leftIRCalc()
+// {
+//     for(int i = 0; i<sensor_sample; ++i)
+//   {
+//     left_ir_sum+= analogRead(left_ir_pin);
+//   }
 
-  left_ir_average_val = left_ir_sum/sensor_sample;
-  Serial.print("Sensor Value: ");
-  Serial.println(left_ir_average_val);
-  left_ir_distance = (-0.0903*left_ir_average_val + 65.306)*10; //analog to mm function
-  Serial.print("Distance in cm: ");
-  Serial.println(left_ir_distance); 
-  left_ir_sum = 0;
+//   left_ir_average_val = left_ir_sum/sensor_sample;
+//   Serial.print("Sensor Value: ");
+//   Serial.println(left_ir_average_val);
+//   left_ir_distance = (-0.0903*left_ir_average_val + 65.306)*10; //analog to mm function
+//   Serial.print("Distance in cm: ");
+//   Serial.println(left_ir_distance); 
+//   left_ir_sum = 0;
+// }
+
+void timerInterrupt()
+{
+  left_ir_distance = readIRSensor(left_ir_pin);
+  front_ir_distance = readIRSensor(front_ir_pin);
 }
 
+float readIRSensor(int ir_pin)
+{
+  float ir_sum;
+  float ir_average_val;
+  float ir_distance;
+  for(int i = 0; i<sensor_sample; ++i)
+  {
+    ir_sum+= analogRead(ir_pin);
+  }
+
+  ir_average_val = ir_sum/sensor_sample;
+  ir_distance = (-0.0903*ir_average_val + 65.306)*10; //analog to mm function
+  return ir_distance;
+
+}
