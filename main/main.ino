@@ -41,7 +41,7 @@ float left_ir_distance = 0;
 
 //declare mm/pulse constant
 //converts encoder ticks to mm
-const float pulses_to_mm = 0.05283198477;
+const float pulses_to_mm = 0.054048211;
 
 //instantiate the encoder objects
 Encoder m1_Enc(m1_ch_B, m1_ch_A); // swapped channels A & B so that both motors have positive readings when moving forward
