@@ -32,10 +32,10 @@ const int right_motor_ch_A = 18;
 const int right_motor_ch_B = 19;
 
 //declare left ir sensor PID constants and error values
-double left_ir_kp = 1;
+double left_ir_kp = 0.7;
 double left_ir_kd = 0;
 double left_ir_ki = 0;
-double left_ir_desired_distance = 47; //keep robot 47mm from wall
+double left_ir_desired_distance = 50; //keep robot 47mm from wall
 volatile double left_ir_distance_error;
 volatile double left_ir_last_distance_error;
 volatile double left_ir_derivative_error;
@@ -55,7 +55,7 @@ volatile double forward_power;
 //declare ir values
 int left_ir_pin = A0;
 int front_ir_pin = A1;
-float sensor_sample = 10;
+float sensor_sample = 3;
 float left_ir_distance;
 volatile float front_ir_distance;
 
@@ -93,6 +93,8 @@ volatile int right_motor_speed = 0;
 //declare wheel odometry variables
 int wheelbase = 96;
 
+float timenow = 0;
+float time_prev = 0;
 void setup() {
 
   //declare encoder pins as inputs
@@ -114,12 +116,23 @@ void setup() {
 
 void loop() 
 {
-  Serial.println(left_ir_distance);
+timenow = millis();
 
-//  Serial.print(left_ir_distance);
-//  Serial.print(" ");
-//  Serial.println(left_ir_desired_distance);
-//leftMotor.setSpeed(60);
+if (timenow - time_prev > 1000)
+{
+ Serial.print("Left Motor Speed: ");
+ Serial.println(left_motor_speed);
+ Serial.print("Right Motor Speed: ");
+ Serial.println(right_motor_speed);
+
+ Serial.print("IR Distance");
+ Serial.println(left_ir_distance);
+//  Serial.print("Analog Value");
+//  Serial.println(right_motor_speed);
+
+  time_prev = timenow;
+}
+
 }
 
 
@@ -128,17 +141,47 @@ void timerInterrupt()
 {
   
   left_ir_distance = readIRSensor(left_ir_pin);
-  front_ir_distance = readIRSensor(front_ir_pin);
-  //Serial.println(left_ir_distance);
+  //front_ir_distance = readIRSensor(front_ir_pin);
   wallFollowPID();
-  forward_power = 60;
-  right_motor_speed = forward_power + turn_rate;
-  left_motor_speed = forward_power - turn_rate;
+  forward_power = 80;
+  right_motor_speed = forward_power - turn_rate;
+  left_motor_speed = forward_power + turn_rate;
 
+
+ // test 
+  // if(right_motor_speed>100) right_motor_speed = 100;
+  // if(right_motor_speed<-100) right_motor_speed = -100;
+  // if(right_motor_speed>0 && right_motor_speed<=60)
+  // {
+  //   right_motor_speed = 60;
+  // }
+
+  // if(right_motor_speed<0 && right_motor_speed>-60)
+  // {
+  //   right_motor_speed = -60;
+  // }
+
+  // if(left_motor_speed>100) left_motor_speed = 100;
+  // if(left_motor_speed<-100) left_motor_speed = -100;
+  // if(left_motor_speed>0 && left_motor_speed<=60)
+  // {
+  //   if (left_motor_speed>0) left_motor_speed = 60;
+  // }
+
+  //   if(left_motor_speed<0 && left_motor_speed>-60)
+  // {
+  //   left_motor_speed = -60;
+  // }
+
+
+
+//works
   if(right_motor_speed>100)  right_motor_speed = 100;
   if(right_motor_speed<-100) right_motor_speed = -100;
+
   if(left_motor_speed>100)   left_motor_speed = 100;
   if(left_motor_speed<-100)  left_motor_speed = -100;
+
 
 
   rightMotor.setSpeed(right_motor_speed);
@@ -160,7 +203,16 @@ float readIRSensor(int ir_pin)
   }
 
   ir_average_val = ir_sum/sensor_sample;
-  ir_distance = (-0.0903*ir_average_val + 65.306)*10; //analog to mm function
+  if(ir_average_val<500)
+  {
+    ir_distance = 20;
+  }
+
+  else
+  {
+    ir_distance = (-0.0903*ir_average_val + 65.306)*10; //analog to mm function
+  }
+  
   return ir_distance;
 }
 
