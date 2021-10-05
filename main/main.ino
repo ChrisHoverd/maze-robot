@@ -36,12 +36,12 @@ double left_ir_kp;
 double left_ir_kd;
 double left_ir_ki;
 double left_ir_desired_distance = 47; //keep robot 47mm from wall
-double left_ir_distance_error;
-double left_ir_last_distance_error;
-double left_ir_derivative_error;
-double left_ir_integral_error;
-double turn_rate;
-double forward_power;
+volatile double left_ir_distance_error;
+volatile double left_ir_last_distance_error;
+volatile double left_ir_derivative_error;
+volatile double left_ir_integral_error;
+volatile double turn_rate;
+volatile double forward_power;
 
 //declare PID constants **uncomment if needed
 // double front_ir_kp;
@@ -56,8 +56,8 @@ double forward_power;
 int left_ir_pin = A0;
 int front_ir_pin = A1;
 float sensor_sample = 10;
-float left_ir_distance;
-float front_ir_distance;
+volatile float left_ir_distance;
+volatile float front_ir_distance;
 
 //declare mm/pulse constant
 //converts encoder ticks to mm
@@ -81,16 +81,14 @@ volatile double xPosition = 0;
 volatile double yPosition = 0;
 
 
-float distance;
-
 //instantiate the motor objects
 CytronMD leftMotor(PWM_DIR, 5, 4); // Motor 1 EN = Pin 5, DIR = 4
 CytronMD rightMotor(PWM_DIR, 6, 7); // Motor 2 EN = Pin 6, Dir = 7
 
 
 //declare motor PWM values, ie. -255 to 255
-int left_motor_speed;
-int right_motor_speed;
+volatile int left_motor_speed;
+volatile int right_motor_speed;
 
 //declare wheel odometry variables
 int wheelbase = 96;
@@ -106,8 +104,8 @@ void setup() {
   //sets the reference voltage for the analog inputs, ie. 3.3V from the arduino for the IR sensors
   analogReference(EXTERNAL);
 
-  Timer3.initialize(50000); // 50 millisecond interrupt timer
-  Timer3.attachInterrupt(timerInterrupt); //calls timerInterrupt every 50 milliseconds
+  //Timer3.initialize(100000); // 50 millisecond interrupt timer
+  //Timer3.attachInterrupt(timerInterrupt); //calls timerInterrupt every 50 milliseconds
   
   //sets the data rate in bits per second (baud)
   Serial.begin(9600);
@@ -116,54 +114,61 @@ void setup() {
 
 void loop() 
 {
-
-    
+  left_ir_distance = readIRSensor(left_ir_pin);
+  Serial.println(left_ir_distance);
+  delay(1000);
 
 }
 
+
+
 void timerInterrupt()
 {
-  left_ir_distance = readIRSensor(left_ir_pin);
-  front_ir_distance = readIRSensor(front_ir_pin);
-  
-  wallFollowPID();
+  //left_ir_distance = readIRSensor(left_ir_pin);
+  //left_ir_distance = readIRSensor(left_ir_pin);
+  // front_ir_distance = readIRSensor(front_ir_pin);
+  // Serial.println(left_ir_distance);
+  // wallFollowPID();
+  // forward_power = 60;
+  // right_motor_speed = forward_power + turn_rate;
+  // left_motor_speed = forward_power - turn_rate;
 
-  right_motor_speed = forward_power + turn_rate;
-  left_motor_speed = forward_power - turn_rate;
+  // if(right_motor_speed>100)
+  // {
+  //   right_motor_speed = 100;
+  // }
 
-  if(right_motor_speed>65)
-  {
-    right_motor_speed = 65;
-  }
+  //   if(right_motor_speed<-100)
+  // {
+  //   right_motor_speed = -100;
+  // }
 
-    if(right_motor_speed<-65)
-  {
-    right_motor_speed = -65;
-  }
+  // if(left_motor_speed>100)
+  // {
+  //   left_motor_speed = 100;
+  // }
 
-  if(left_motor_speed>65)
-  {
-    left_motor_speed = 65;
-  }
+  //   if(left_motor_speed<-100)
+  // {
+  //   left_motor_speed = -100;
+  // }
 
-    if(left_motor_speed<-65)
-  {
-    left_motor_speed = -65;
-  }
-
-  rightMotor.setSpeed(right_motor_speed);
-  leftMotor.setSpeed(left_motor_speed);
+  // rightMotor.setSpeed(right_motor_speed);
+  // leftMotor.setSpeed(left_motor_speed);
 
 }
 
 float readIRSensor(int ir_pin)
 {
-  float ir_sum;
-  float ir_average_val;
-  float ir_distance;
+  float ir_val = 0;
+  float ir_sum = 0;
+  float ir_average_val = 0;
+  float ir_distance = 0;
+
   for(int i = 0; i<sensor_sample; ++i)
   {
-    ir_sum+= analogRead(ir_pin);
+    ir_val = analogRead(ir_pin);
+    ir_sum+= ir_val;
   }
 
   ir_average_val = ir_sum/sensor_sample;
