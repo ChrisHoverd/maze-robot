@@ -4,7 +4,6 @@
 //include motor driver library
 #include "CytronMotorDriver.h" 
 #include "Encoder.h"
-#include "TimerThree.h"
 
 // declare encoder input pins
 // motor 1 and motor 2 are the left and right motors respectively, as seen from above with tripod wheel in the rear
