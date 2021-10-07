@@ -1,5 +1,4 @@
-//the void loop has a brief test of moving forward and doing a turn 
-// this is hardcoded and could be used as a last resort
+//hardcoded phase A
 
 //include motor driver library
 #include "CytronMotorDriver.h" 
@@ -54,26 +53,13 @@ void loop() {
 //********Top Level***************
 
 //top level - first straightaway
-forward(200);
+forward(205);
 
-//top level - first left turn
-leftTurn();
-
-//top level - second straightaway
-forward(200);
-
-//top level - second left turn
-leftTurn();
-
-//top level - third straight away
-forward(200);
-
-//top level - first right turn 
+//top level - first right turn
 rightTurn();
 
-// top level to ramp - final straight away of top level
-forward(200);
-
+//top level to ramp - second straight away that then enters ramp
+forward(1025);
 
 
 // ********* Transition from first floor to ramp ************
@@ -82,26 +68,26 @@ forward(200);
 rightTurn();
 
 //ramp - first straight away to first landing
-forward(200);
+forward(737.50);
 
 // ramp - second right turn on ramp
 rightTurn();
 
 //ramp - second straightaway on ramp to second landing
-forward(200);
+forward(1450);
 
 //ramp - third right turn on ramp
 rightTurn();
 
 //ramp - third straight away to bottom of ramp
-forward(200);
+forward(615);
 
 //ramp - fourth right turn on ramp to face the lower level
 rightTurn();
 
 //ramp to lower level - final straight away of ramp to enter lower level
-forward(200)
-}
+forward(205);
+
 
 
 
@@ -111,19 +97,21 @@ forward(200)
 rightTurn();
 
 //lower level - first straight away of lower level 
-forward(200);
+forward(410);
 
 // lower level - first left turn of lower level
 leftTurn();
 
 // lower level - second straight away on lower level
-forward(200);
+forward(615);
 
 //lower level - last left turn of lower level
 leftTurn();
 
 //lower level - move toward minder
-forward();
+forward(205);
+
+}
 
 // **************   pick up miner  **********
 void forward(double mm)
@@ -157,7 +145,7 @@ void leftTurn()
   rightMotor.setSpeed(right_motor_speed);
   left_Enc.readAndReset();
 
-  while(distance<mm)
+  while(distance<96)
     {
       left_motor_counter = left_Enc.read();
       distance = abs((left_motor_counter*pulses_to_mm));
@@ -178,7 +166,7 @@ void rightTurn()
   rightMotor.setSpeed(right_motor_speed);
   left_Enc.readAndReset();
 
-  while(distance<mm)
+  while(distance<96)
     {
       left_motor_counter = left_Enc.read();
       distance = abs((left_motor_counter*pulses_to_mm));
