@@ -145,7 +145,7 @@ void leftTurn()
   rightMotor.setSpeed(right_motor_speed);
   left_Enc.readAndReset();
 
-  while(distance<96)
+  while(distance<98)
     {
       left_motor_counter = left_Enc.read();
       distance = abs((left_motor_counter*skinny_wheels_pulses_to_mm));
@@ -166,7 +166,7 @@ void rightTurn()
   rightMotor.setSpeed(right_motor_speed);
   left_Enc.readAndReset();
 
-  while(distance<96)
+  while(distance<98)
     {
       left_motor_counter = left_Enc.read();
       distance = abs((left_motor_counter*skinny_wheels_pulses_to_mm));
