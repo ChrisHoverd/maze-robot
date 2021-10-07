@@ -11,7 +11,7 @@ PID test
 double left_ir_kp = 1;
 double left_ir_kd = 0;
 double left_ir_ki = 0;
-double left_ir_desired_distance = 50; //keep robot 47mm from wall
+double left_ir_desired_distance = 50; //keep robot 50mm from wall
 volatile double left_ir_distance_error;
 volatile double left_ir_last_distance_error;
 volatile double left_ir_derivative_error;
@@ -21,7 +21,7 @@ volatile double forward_power;
 
 //declare ir values
 int left_ir_pin = A0;
-int front_ir_pin = A1;
+//int front_ir_pin = A1;
 float sensor_sample = 3;
 float left_ir_distance;
 
@@ -50,66 +50,42 @@ Serial.begin(9600);
 
 void loop() 
 {
-timenow = millis();
+// timenow = millis();
 
-if (timenow - time_prev > 1000)
-{
- Serial.print("Left Motor Speed: ");
- Serial.println(left_motor_speed);
- Serial.print("Right Motor Speed: ");
- Serial.println(right_motor_speed);
-
- Serial.print("IR Distance");
- Serial.println(left_ir_distance);
-//  Serial.print("Analog Value");
+// if (timenow - time_prev > 1000)
+// {
+//  Serial.print("Left Motor Speed: ");
+//  Serial.println(left_motor_speed);
+//  Serial.print("Right Motor Speed: ");
 //  Serial.println(right_motor_speed);
 
-time_prev = timenow;
-}
+// //  Serial.print("IR Distance");
+// //  Serial.println(left_ir_distance);
+// // //  Serial.print("Analog Value");
+// // //  Serial.println(right_motor_speed);
+
+// time_prev = timenow;
+// }
  
 left_ir_distance = readIRSensor(left_ir_pin);
 wallFollowPID();
-forward_power = 80;
+forward_power = 100;
+
 right_motor_speed = forward_power - turn_rate;
 left_motor_speed = forward_power + turn_rate;
-
 //works
-if(right_motor_speed>100)  right_motor_speed = 100;
-if(right_motor_speed<-100) right_motor_speed = -100;
+if(right_motor_speed>140)  right_motor_speed = 140;
+//if(right_motor_speed<-100) right_motor_speed = -100;
+if(right_motor_speed<60) right_motor_speed = 60;
 
-if(left_motor_speed>100)   left_motor_speed = 100;
-if(left_motor_speed<-100)  left_motor_speed = -100;
+if(left_motor_speed>140)   left_motor_speed = 140;
+// if(left_motor_speed<-100)  left_motor_speed = -100;
+if(left_motor_speed<60)  left_motor_speed = 60;
 
 
 
 rightMotor.setSpeed(right_motor_speed);
 leftMotor.setSpeed(left_motor_speed);
-
- // test 
-  // if(right_motor_speed>100) right_motor_speed = 100;
-  // if(right_motor_speed<-100) right_motor_speed = -100;
-  // if(right_motor_speed>0 && right_motor_speed<=60)
-  // {
-  //   right_motor_speed = 60;
-  // }
-
-  // if(right_motor_speed<0 && right_motor_speed>-60)
-  // {
-  //   right_motor_speed = -60;
-  // }
-
-  // if(left_motor_speed>100) left_motor_speed = 100;
-  // if(left_motor_speed<-100) left_motor_speed = -100;
-  // if(left_motor_speed>0 && left_motor_speed<=60)
-  // {
-  //   if (left_motor_speed>0) left_motor_speed = 60;
-  // }
-
-  //   if(left_motor_speed<0 && left_motor_speed>-60)
-  // {
-  //   left_motor_speed = -60;
-  // }
- 
 }
 
 float readIRSensor(int ir_pin)
