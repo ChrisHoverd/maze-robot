@@ -13,8 +13,8 @@ const int right_motor_ch_B = 19;
 
 //declare mm/pulse constant
 //converts encoder ticks to mm
-const float pulses_to_mm = 0.054048211;
-
+const float thick_wheels_pulses_to_mm = 0.054048211; //thick wheels
+const float skinny_wheels_pulses_to_mm = 0.06222775; // skinny wheels
 //instantiate the encoder objects
 Encoder left_Enc(left_motor_ch_B, left_motor_ch_A); // swapped channels A & B so that both motors have positive readings when moving forward
 Encoder right_Enc(right_motor_ch_A, right_motor_ch_B);
@@ -117,8 +117,8 @@ forward(205);
 void forward(double mm)
 { 
 
-  left_motor_speed = 60;
-  right_motor_speed = 60;
+  left_motor_speed = 80;
+  right_motor_speed = 80;
   float distance = 0;
   leftMotor.setSpeed(left_motor_speed);
   rightMotor.setSpeed(right_motor_speed);
@@ -127,7 +127,7 @@ void forward(double mm)
   while(distance<mm)
     {
       left_motor_counter = left_Enc.read();
-      distance = abs((left_motor_counter*pulses_to_mm));
+      distance = abs((left_motor_counter*skinny_wheels_pulses_to_mm));
     }
 
     leftMotor.setSpeed(0);
@@ -148,7 +148,7 @@ void leftTurn()
   while(distance<96)
     {
       left_motor_counter = left_Enc.read();
-      distance = abs((left_motor_counter*pulses_to_mm));
+      distance = abs((left_motor_counter*skinny_wheels_pulses_to_mm));
     }
 
     leftMotor.setSpeed(0);
@@ -169,7 +169,7 @@ void rightTurn()
   while(distance<96)
     {
       left_motor_counter = left_Enc.read();
-      distance = abs((left_motor_counter*pulses_to_mm));
+      distance = abs((left_motor_counter*skinny_wheels_pulses_to_mm));
     }
 
     leftMotor.setSpeed(0);
