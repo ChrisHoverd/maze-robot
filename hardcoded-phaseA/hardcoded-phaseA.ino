@@ -7,7 +7,7 @@
 #include "Encoder.h"
 
 // declare encoder input pins
-// motor 1 and motor 2 are the left and right motors respectively, as seen from above with tripod wheel in the rear
+// motor 1 and motor 2 are the left and right motors respectively, as seen from above with tripod wheel in the rear.
 const int left_motor_ch_A = 2;
 const int left_motor_ch_B = 3;
 const int right_motor_ch_A = 18;
