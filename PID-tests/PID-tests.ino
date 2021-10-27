@@ -10,8 +10,8 @@ The main use of this code is to develop, test, and troubleshoot the wall followi
 //declare left ir sensor PID constants and error values
 double left_ir_kp = 5;
 double left_ir_kd = 0;
-double left_ir_ki = 0;
-double left_ir_desired_distance = 40; //keep robot 60mm from wall
+double left_ir_ki = 0.001;
+double left_ir_desired_distance = 30; //keep robot 60mm from wall
 volatile double left_ir_distance_error;
 volatile double left_ir_last_distance_error;
 volatile double left_ir_derivative_error;
@@ -98,10 +98,10 @@ left_motor_speed = forward_power + turn_rate;
 
 //sets boundaries on how high and low the PWM values sent to the motors can be
 if(right_motor_speed>200)  right_motor_speed = 200;
-if(right_motor_speed<60) right_motor_speed = 60;
+if(right_motor_speed<-200) right_motor_speed = -200;
 
 if(left_motor_speed>200)   left_motor_speed = 200;
-if(left_motor_speed<60)  left_motor_speed = 60;
+if(left_motor_speed<-200)  left_motor_speed = -200;
 
 
 //sends the motor speeds to the right and left motors
