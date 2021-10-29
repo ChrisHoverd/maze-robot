@@ -6,8 +6,8 @@
 
 #include <SharpDistSensor.h>
 
-//declare ir analog input pin and analog reading 
-int ir_pin = A0;
+//change ir pin to A0, A1, or A2 depending on IR sensor
+int ir_pin = A2;
 int ir_val = 0;
 
 //declare sample size value and sum values used for averaging readings
@@ -21,7 +21,6 @@ float distance = 0;
 // const byte medianFilterWindowSize = 3;
 // const unsigned int minVal = 55; // ~800 mm
 // const unsigned int maxVal = 400; // ~50mm
-
 // SharpDistSensor leftIRSensor(ir_pin, medianFilterWindowSize);
 
 void setup() {
