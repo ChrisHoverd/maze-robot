@@ -5,6 +5,9 @@ The main use of this code is to integrate wheel odometry and the PID. PID testin
 //include motor driver library
 #include "CytronMotorDriver.h" 
 #include "Encoder.h"
+#include "Servo.h"
+
+Servo gripper;
 
 const int left_motor_ch_A = 0;
 const int left_motor_ch_B = 1;
@@ -13,9 +16,9 @@ const int right_motor_ch_B = 3;
 
 //declare left ir sensor PID constants and error values
 double left_ir_kp = 5;
-double left_ir_kd = 0.001;
-double left_ir_ki = 0.001;
-double left_ir_desired_distance = 30; //keep robot 60mm from wall
+double left_ir_kd = 0.1;
+double left_ir_ki = 0;
+double left_ir_desired_distance = 50; //keep robot 60mm from wall
 volatile double left_ir_distance_error;
 volatile double left_ir_last_distance_error;
 volatile double left_ir_derivative_error;
@@ -31,11 +34,17 @@ volatile long right_motor_counter = 0;
 //declare ir values
 int left_ir_pin = A0;
 int front_ir_pin = A1;
+int right_ir_pin = A2;
 
 //declare IR sampling size and distance
 float sensor_sample = 50;
 float left_ir_distance;
 float front_ir_distance=60;
+float right_ir_distance;
+
+int left_turn_counter = 0;
+int right_turn_counter = 0;
+int about_turn_counter = 0;
 
 Encoder left_Enc(left_motor_ch_B, left_motor_ch_A); // swapped channels A & B so that both motors have positive readings when moving forward
 Encoder right_Enc(right_motor_ch_A, right_motor_ch_B);
@@ -56,11 +65,12 @@ float time_prev = 0;
 
 float distance = 0;
 void setup() {
-
+  gripper.attach(9);
   pinMode (left_motor_ch_A, INPUT_PULLUP);
   pinMode (left_motor_ch_B, INPUT_PULLUP);
   pinMode (right_motor_ch_A, INPUT_PULLUP);
   pinMode (right_motor_ch_B, INPUT_PULLUP);
+  openGripper();
   Serial.begin(9600);
 
 }
@@ -69,11 +79,25 @@ void loop()
 {
   left_ir_distance = readIRSensor(left_ir_pin);
   front_ir_distance = readIRSensor(front_ir_pin);
+  right_ir_distance = readIRSensor(right_ir_pin);
   wallFollowPID();
-  if (left_ir_desired_distance<60 && front_ir_distance<50)
+
+  if (left_ir_distance<60 && front_ir_distance<50 && right_ir_distance>120)
   {
+    right_turn_counter++;
     rightTurn();
   }
+  
+  if (left_ir_distance<70 && front_ir_distance<50 && right_ir_distance<70)
+  {
+    about_turn_counter++;
+    aboutTurn();
+  }
+  // if (left_ir_distance>120 && right_ir_distance<70)
+  // {
+  //   left_turn_counter++;
+  //   leftTurn();
+  // }
 
 
 
@@ -83,18 +107,6 @@ void loop()
 
 
 
-    // while(front_ir_distance>50)
-    // {
-    //   front_ir_distance = readIRSensor(front_ir_pin);
-    //   wallFollowPID();
-    // }
-    // rightTurn();
-    // front_ir_distance = 60;
-    // while(front_ir_distance>50)
-    // {
-    //   front_ir_distance = readIRSensor(front_ir_pin);
-    //   wallFollowPID();
-    // }
 
 
 }
@@ -185,7 +197,7 @@ void leftTurn()
   rightMotor.setSpeed(right_motor_speed);
   left_Enc.readAndReset();
 
-  while(distance<62)
+  while(distance<68)
     {
       left_motor_counter = left_Enc.read();
       distance = abs((left_motor_counter*pulses_to_mm));
@@ -193,7 +205,21 @@ void leftTurn()
 
   leftMotor.setSpeed(0);
   rightMotor.setSpeed(0);
-  delay(2000);
+  delay(1000);
+
+  left_motor_speed = 80;
+  right_motor_speed = 80;
+  distance = 0;
+  leftMotor.setSpeed(left_motor_speed);
+  rightMotor.setSpeed(right_motor_speed);
+  left_Enc.readAndReset();
+
+    while(distance<120)
+    {
+      left_motor_counter = left_Enc.read();
+      distance = abs((left_motor_counter*pulses_to_mm));
+    }
+
 }
 
 void rightTurn()
@@ -206,14 +232,51 @@ void rightTurn()
   rightMotor.setSpeed(right_motor_speed);
   left_Enc.readAndReset();
 
-  while(distance<62)
+  while(distance<68)
     {
       left_motor_counter = left_Enc.read();
+
+
       distance = abs((left_motor_counter*pulses_to_mm));
     }
 
   leftMotor.setSpeed(0);
   rightMotor.setSpeed(0);
-  delay(2000);
+  delay(1000);
 }
 
+void aboutTurn()
+{ 
+
+  left_motor_speed = 80;
+  right_motor_speed = -80;
+  float distance = 0;
+  leftMotor.setSpeed(left_motor_speed);
+  rightMotor.setSpeed(right_motor_speed);
+  left_Enc.readAndReset();
+
+  while(distance<136)
+    {
+      left_motor_counter = left_Enc.read();
+
+
+      distance = abs((left_motor_counter*pulses_to_mm));
+    }
+
+  leftMotor.setSpeed(0);
+  rightMotor.setSpeed(0);
+  delay(1000);
+}
+
+openGripper()
+{
+  //100 is open
+  gripper.write(100)
+  delay(100);
+}
+
+closeGripper()
+{
+  gripper.write(205);
+  delay(100);
+}
