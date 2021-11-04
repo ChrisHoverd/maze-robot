@@ -18,13 +18,26 @@ const int right_motor_ch_B = 3;
 double left_ir_kp = 5;
 double left_ir_kd = 0.1;
 double left_ir_ki = 0;
-double left_ir_desired_distance = 50; //keep robot 60mm from wall
+double left_ir_desired_distance = 50; 
 volatile double left_ir_distance_error;
 volatile double left_ir_last_distance_error;
 volatile double left_ir_derivative_error;
 volatile double left_ir_integral_error;
 volatile double turn_rate;
 volatile double forward_power;
+
+//declare right ir sensor PID constants and error values
+double right_ir_kp = 5;
+double right_ir_kd = 0.1;
+double right_ir_ki = 0;
+double right_ir_desired_distance = 50; 
+volatile double right_ir_distance_error;
+volatile double right_ir_last_distance_error;
+volatile double right_ir_derivative_error;
+volatile double right_ir_integral_error;
+
+
+
 
 const float pulses_to_mm = 0.03282036321;
 //declare encoder counter variables
@@ -80,12 +93,14 @@ void loop()
   left_ir_distance = readIRSensor(left_ir_pin);
   front_ir_distance = readIRSensor(front_ir_pin);
   right_ir_distance = readIRSensor(right_ir_pin);
-  wallFollowPID();
+  leftwallFollowPID();
 
   if (left_ir_distance<60 && front_ir_distance<50 && right_ir_distance>120)
   {
     right_turn_counter++;
     rightTurn();
+
+
   }
   
   if (left_ir_distance<70 && front_ir_distance<50 && right_ir_distance<70)
@@ -98,17 +113,6 @@ void loop()
   //   left_turn_counter++;
   //   leftTurn();
   // }
-
-
-
-
-
-
-
-
-
-
-
 }
 
 //this function receives an ir pin value and returns a distance value
@@ -135,7 +139,7 @@ float readIRSensor(int ir_pin)
 
 //this function calculates the PID error values and from that
 // it determines the turn_rate 
-void wallFollowPID()
+void leftwallFollowPID()
 {
 
   left_ir_distance_error = left_ir_desired_distance - left_ir_distance;
@@ -150,6 +154,34 @@ void wallFollowPID()
 
   right_motor_speed = forward_power - turn_rate;
   left_motor_speed = forward_power + turn_rate;
+
+
+
+  if(right_motor_speed>200)  right_motor_speed = 200;
+  if(right_motor_speed<-200) right_motor_speed = -200;
+
+  if(left_motor_speed>200)   left_motor_speed = 200;
+  if(left_motor_speed<-200)  left_motor_speed = -200;
+
+
+  rightMotor.setSpeed(right_motor_speed);
+  leftMotor.setSpeed(left_motor_speed);
+
+}
+
+void rightwallFollowPID()
+{
+
+  right_ir_distance_error = right_ir_desired_distance - right_ir_distance;
+  right_ir_derivative_error = right_ir_distance_error - right_ir_last_distance_error;
+  right_ir_last_distance_error = right_ir_derivative_error;
+  right_ir_integral_error += right_ir_distance_error;
+  turn_rate = right_ir_kp*right_ir_distance_error + right_ir_kd*right_ir_derivative_error + right_ir_ki*right_ir_integral_error;
+
+  forward_power = 80;
+
+  right_motor_speed = forward_power + turn_rate;
+  left_motor_speed = forward_power - turn_rate;
 
 
 
@@ -206,20 +238,6 @@ void leftTurn()
   leftMotor.setSpeed(0);
   rightMotor.setSpeed(0);
   delay(1000);
-
-  left_motor_speed = 80;
-  right_motor_speed = 80;
-  distance = 0;
-  leftMotor.setSpeed(left_motor_speed);
-  rightMotor.setSpeed(right_motor_speed);
-  left_Enc.readAndReset();
-
-    while(distance<120)
-    {
-      left_motor_counter = left_Enc.read();
-      distance = abs((left_motor_counter*pulses_to_mm));
-    }
-
 }
 
 void rightTurn()
@@ -268,15 +286,16 @@ void aboutTurn()
   delay(1000);
 }
 
-openGripper()
+void openGripper()
 {
   //100 is open
-  gripper.write(100)
+  gripper.write(100);
   delay(100);
 }
 
-closeGripper()
+void closeGripper()
 {
+  //205 is close
   gripper.write(205);
   delay(100);
 }
