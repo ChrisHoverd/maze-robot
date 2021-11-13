@@ -8,14 +8,14 @@ The main use of this code is to develop, test, and troubleshoot the wall followi
 
 
 //declare left ir sensor PID constants and error values
-double left_ir_kp = 5;
-double left_ir_kd = 0.001;
-double left_ir_ki = 0.001;
-double left_ir_desired_distance = 30; //keep robot 60mm from wall
-volatile double left_ir_distance_error;
-volatile double left_ir_last_distance_error;
-volatile double left_ir_derivative_error;
-volatile double left_ir_integral_error;
+double kp = 5;
+double kd = 0.001;
+double ki = 0.001;
+double desired_distance = 45;
+volatile double error;
+volatile double last_error;
+volatile double derivative_error;
+volatile double integral_error;
 volatile double turn_rate;
 volatile double forward_power;
 
@@ -26,7 +26,7 @@ int right_ir_pin = A2;
 //declare IR sampling size and distance
 float sensor_sample = 50;
 float left_ir_distance;
-float front_ir_distance=60;
+float front_ir_distance;
 float right_ir_distance;
 
 
@@ -41,8 +41,9 @@ volatile int left_motor_speed = 0;
 volatile int right_motor_speed = 0;
 
 //time values for printing debugging values
-float timenow = 0;
+float time_now = 0;
 float time_prev = 0;
+float time_change;
 
 void setup() {
 
@@ -77,26 +78,22 @@ time_prev = timenow;
 
 //********************************
 
-//retireve a left IR distance value
-left_ir_distance = readIRSensor(left_ir_pin);
 
-//calculate PID error values, updates the turn_rate variable
+left_ir_distance = readIRSensor(left_ir_pin);
 wallFollowPID();
 
-//sets forward power to 70 in PWM
-forward_power = 80;
 
-//sets the right and left motor speeds according to the turn_rate calculated in the PID function
+forward_power = 80;
 right_motor_speed = forward_power - turn_rate;
 left_motor_speed = forward_power + turn_rate;
 
 
 //sets boundaries on how high and low the PWM values sent to the motors can be
-if(right_motor_speed>200)  right_motor_speed = 200;
-if(right_motor_speed<-200) right_motor_speed = -200;
+if(right_motor_speed>255)  right_motor_speed = 255;
+if(right_motor_speed<-255) right_motor_speed = -255;
 
-if(left_motor_speed>200)   left_motor_speed = 200;
-if(left_motor_speed<-200)  left_motor_speed = -200;
+if(left_motor_speed>255)   left_motor_speed = 255;
+if(left_motor_speed<-255)  left_motor_speed = -255;
 
 
 //sends the motor speeds to the right and left motors
@@ -130,10 +127,12 @@ float readIRSensor(int ir_pin)
 // it determines the turn_rate 
 void wallFollowPID()
 {
-
-  left_ir_distance_error = left_ir_desired_distance - left_ir_distance;
-  left_ir_derivative_error = left_ir_distance_error - left_ir_last_distance_error;
-  left_ir_last_distance_error = left_ir_derivative_error;
-  left_ir_integral_error += left_ir_distance_error;
-  turn_rate = left_ir_kp*left_ir_distance_error + left_ir_kd*left_ir_derivative_error + left_ir_ki*left_ir_integral_error;
+  time_now = micros();
+  time_change = time_now - time_prev;
+  error = desired_distance - left_ir_distance;
+  derivative_error = (error - last_error)/time_change;
+  last_error = derivative_error;
+  integral_error += (error*time_change);
+  turn_rate = kp*error + kd*derivative_error + ki*integral_error;
+  time_prev = time_now;
 }
