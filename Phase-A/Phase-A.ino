@@ -1,5 +1,6 @@
 /*
   The main purpose of this code is to solve a maze via wheel odometry
+  This program was used in the Phase A demonstration
 */
 
 //include motor driver and encoder libraries
