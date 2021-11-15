@@ -21,7 +21,7 @@ volatile long left_motor_counter_change;
 
 //declare left ir sensor distance PID constants and error values
 double kp = 5;
-double kd = 20;
+double kd = 0;
 double ki = 0;
 double desired_distance = 45;
 volatile double error;
@@ -108,6 +108,10 @@ void loop()
 
 left_ir_distance = readIRSensor(left_ir_pin);
 wallFollowPID();
+
+if(turn_rate>255)  turn_rate = 255;
+if(turn_rate<-255) turn_rate = -255;
+
 pwmToSpeed();
 
 
@@ -120,10 +124,10 @@ leftWheelSpeedPID(left_motor_speed);
 
 //sets boundaries on how high and low the PWM values sent to the motors can be
 if(right_wheel_pwm>255)  right_wheel_pwm = 255;
-if(right_wheel_pwm<-255) right_wheel_pwm = -255;
+if(right_wheel_pwm<0) right_wheel_pwm = 0;
 
 if(left_wheel_pwm>255)   left_wheel_pwm = 255;
-if(left_wheel_pwm<-255)  left_wheel_pwm = -255;
+if(left_wheel_pwm<0)  left_wheel_pwm = 0;
 
 
 // //sends the motor speeds to the right and left motors
@@ -169,7 +173,15 @@ void wallFollowPID()
 
 void pwmToSpeed()
 {
-  speed = 5.09 + (2*turn_rate) - (pow(4.56,-3) * pow(turn_rate,2));
+  if(turn_rate>0)
+  {
+    speed = 5.09 + (2*turn_rate) - (pow(4.56,-3) * pow(turn_rate,2));
+  }
+  if(turn_rate<0)
+  {
+    speed = -5.09 + (2*turn_rate) + (pow(4.56,-3) * pow(turn_rate,2));
+  }
+
 }
 
 void leftWheelSpeedPID(double desired_speed)
