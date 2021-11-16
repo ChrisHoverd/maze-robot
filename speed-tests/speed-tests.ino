@@ -33,6 +33,7 @@ volatile int right_motor_speed = 0;
 
 double distance;
 double speed;
+double PWM = 200;
 
 //time values for printing debugging values
 float time_now = 0;
@@ -48,25 +49,48 @@ void setup() {
   last_right_motor_counter = left_Enc.read(); 
   delay(1000);
   //change these PWM values to compare PWM to speed
-  leftMotor.setSpeed(255);
-  rightMotor.setSpeed(255);
+  leftMotor.setSpeed(PWM);
+  rightMotor.setSpeed(PWM);
 }
 
 void loop() {
 
-  time_now = millis();
-  time_change = time_now - time_prev;
-  if (time_change>=1000)
-  {
-    right_motor_counter = right_Enc.read();
-    right_motor_counter_change = right_motor_counter - last_right_motor_counter;
-    last_right_motor_counter = right_motor_counter;
-    distance = right_motor_counter_change*pulses_to_mm;
-    speed = (distance/time_change)*1000;
-    Serial.print("Speed: ");
-    Serial.print(speed);
-    Serial.println(" mm/s");
-    time_prev = time_now;
-  }
-  
+  //use below block to get speed from a known PWM
+  //uncomment if needed
+//  time_now = millis();
+//  time_change = time_now - time_prev;
+//  if (time_change>=1000)
+//  {
+//    right_motor_counter = right_Enc.read();
+//    right_motor_counter_change = right_motor_counter - last_right_motor_counter;
+//    last_right_motor_counter = right_motor_counter;
+//    distance = right_motor_counter_change*pulses_to_mm;
+//    speed = (distance/time_change)*1000;
+//    Serial.print("Speed: ");
+//    Serial.print(speed);
+//    Serial.println(" mm/s");
+//    time_prev = time_now;
+//  }
+
+    //use below to test speed to PWM function
+    //uncomment if needed
+    time_now = millis();
+    time_change = time_now - time_prev;
+    if (time_change>=1000)
+    {
+      if (PWM>0)
+      {
+       speed = -133 + (6.42 * PWM) - (0.0492 * (pow(PWM,2))) + ((1.76 * pow(10, -4)) * (pow(PWM,3))) - (2.35*(pow(10,-7)) * (pow(PWM, 4)));
+      }
+      if(PWM<0)
+      {
+      //speed = -5.09 + (2*turn_rate) + (pow(4.56,-3) * pow(turn_rate,2)); old speed function
+      speed = 133 + (6.42 * PWM) + (0.0492 * pow(PWM,2)) + ((1.76 * pow(10, -4)) * (pow(PWM,3))) + (2.35*(pow(10,-7)) * (pow(PWM, 4)));
+      }
+      Serial.print("Speed: ");
+      Serial.print(speed);
+      Serial.println(" mm/s");
+      time_prev = time_now;
+    }
+    
 }
