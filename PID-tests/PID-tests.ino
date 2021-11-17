@@ -8,9 +8,9 @@ The main use of this code is to develop, test, and troubleshoot the wall followi
 
 
 //declare left ir sensor PID constants and error values
-double kp = 5;
-double kd = 0.001;
-double ki = 0.001;
+double kp = 2.2;
+double kd = 300;
+double ki = 0.00001;
 double desired_distance = 45;
 volatile double error;
 volatile double last_error;
@@ -19,12 +19,17 @@ volatile double integral_error;
 volatile double turn_rate;
 volatile double forward_power;
 
+//time values for PID
+double time_now;
+double time_prev = 0;
+double time_change;
+
 //declare ir values
 int left_ir_pin = A0;
 int front_ir_pin = A1;
 int right_ir_pin = A2;
 //declare IR sampling size and distance
-float sensor_sample = 50;
+int sensor_sample = 50;
 float left_ir_distance;
 float front_ir_distance;
 float right_ir_distance;
@@ -37,13 +42,13 @@ CytronMD rightMotor(PWM_DIR, 5, 4); // EN = Pin 5, DIR = 4
 
 
 //declare motor PWM values, ie. -255 to 255
-volatile int left_motor_speed = 0;
-volatile int right_motor_speed = 0;
+volatile int left_motor_speed;
+volatile int right_motor_speed;
 
 //time values for printing debugging values
-float time_now = 0;
-float time_prev = 0;
-float time_change;
+unsigned long debugging_time_now;
+unsigned long debugging_time_prev = 0;
+unsigned long debugging_time_change;
 
 void setup() {
 
@@ -58,32 +63,36 @@ void loop()
 //********************************
 
 /*
-timenow = millis();
+debugging_time_now = millis();
 
-if (timenow - time_prev > 1000)
+if (debugging_time_now - debugging_time_prev >= 1000)
 {
- Serial.print("Left Motor Speed: ");
- Serial.println(left_motor_speed);
- Serial.print("Right Motor Speed: ");
- Serial.println(right_motor_speed);
-
- Serial.print("IR Distance");
- Serial.println(left_ir_distance);
- Serial.print("Analog Value");
- Serial.println(right_motor_speed);
-
-time_prev = timenow;
+//  Serial.print("Distance ");
+//  Serial.print(left_ir_distance);
+//  Serial.println(" mm");
+ Serial.println(turn_rate);
+ debugging_time_prev = debugging_time_now;
 }
 */
 
 //********************************
 
 
+delay(120);
 left_ir_distance = readIRSensor(left_ir_pin);
+
+//uncomment this section to plot values
+//********************************
+// Serial.print(desired_distance);
+// Serial.print(" ");
+// Serial.println(left_ir_distance);
+//********************************
+
+
 wallFollowPID();
 
 
-forward_power = 80;
+forward_power = 50;
 right_motor_speed = forward_power - turn_rate;
 left_motor_speed = forward_power + turn_rate;
 
@@ -96,7 +105,7 @@ if(left_motor_speed>255)   left_motor_speed = 255;
 if(left_motor_speed<-255)  left_motor_speed = -255;
 
 
-//sends the motor speeds to the right and left motors
+// //sends the motor speeds to the right and left motors
 rightMotor.setSpeed(right_motor_speed);
 leftMotor.setSpeed(left_motor_speed);
 }
@@ -115,10 +124,10 @@ float readIRSensor(int ir_pin)
     ir_val = analogRead(ir_pin);
     ir_sum+= ir_val;
   }
-  ir_average_val = ir_sum/sensor_sample;
 
+  ir_average_val = ir_sum/sensor_sample;
   ir_distance = (478.49*(pow(ir_average_val,-0.866)))*10; //analog to mm function
-  
+  if (ir_distance>150) ir_distance = 150;
   return ir_distance;
 }
 
@@ -128,11 +137,12 @@ float readIRSensor(int ir_pin)
 void wallFollowPID()
 {
   time_now = micros();
-  time_change = time_now - time_prev;
+  time_change = (float)(time_now - time_prev)/1000;
   error = desired_distance - left_ir_distance;
   derivative_error = (error - last_error)/time_change;
-  last_error = derivative_error;
+  last_error = error;
   integral_error += (error*time_change);
-  turn_rate = kp*error + kd*derivative_error + ki*integral_error;
+  turn_rate = (kp*error) + (kd*derivative_error) + (ki*integral_error);
+  //Serial.println(derivative_error);
   time_prev = time_now;
 }
