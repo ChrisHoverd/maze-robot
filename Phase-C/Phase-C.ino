@@ -134,7 +134,7 @@ int craneBackPos = 0;
 int craneUpPos = 55;
 // int craneFrontPos = 145; // fully front
 int craneFrontPos = 140;
-int cranePartlyFrontPos = 100;
+int cranePartlyFrontPos = 90;
 
 int gripperOpenPos = 150; // fully open
 // int gripperOpenPos = 60;
@@ -190,45 +190,45 @@ if (debugging_time_now - debugging_time_prev >= 1000)
    lower_front_ir_distance = readIRSensor(lower_front_ir_pin);
 
   // //normal right turn conditions
-  // if (left_ir_distance<60 && front_ir_distance<50 && right_ir_distance>120 && right_turn_counter >= 1)
-  // {
-  //   right_turn_counter++;
-  //   rightTurn();
-  // }
+ if (left_ir_distance<60 && front_ir_distance<50 && right_ir_distance>120 && right_turn_counter >= 1)
+ {
+   right_turn_counter++;
+   rightTurn();
+ }
 
   // //special left turn for left turn counter = 3    PID change
-  // if (right_ir_distance<60 && front_ir_distance<50 && left_ir_distance>120 && left_turn_counter == 3)
-  // {
-  //   left_turn_counter++;
-  //   specialLeftTurn();
-  //   forward(120);
-  // }
+ if (right_ir_distance<60 && front_ir_distance<50 && left_ir_distance>120 && left_turn_counter == 3)
+ {
+   left_turn_counter++;
+   specialLeftTurn();
+  forward(120);
+ }
 
   //   //left turn conditions
-  // if (right_ir_distance<60 && front_ir_distance<50 && left_ir_distance>120 && left_turn_counter <=2)
-  // {
-  //   left_turn_counter++;
-  //   leftTurn();
-  // }
+ if (right_ir_distance<60 && front_ir_distance<50 && left_ir_distance>120 && left_turn_counter <=2)
+ {
+   left_turn_counter++;
+    leftTurn();
+ }
 
 
   // //right wall follow conditions
-  // if(left_turn_counter<4)
-  // {
-  //   rightWallFollowPID();
-  // }
+   if(left_turn_counter<4)
+   {
+     rightWallFollowPID();
+   }
 
   // //left wall follow conditions
-  // if(left_turn_counter>=4)
-  // {
-  //   leftWallFollowPID();
-  // }
+   if(left_turn_counter>=4)
+   {
+     leftWallFollowPID();
+   }
 
-   rightWallFollowPID();
+//   rightWallFollowPID();
   //normal obstacle pickup
-  if (front_ir_distance>50 && right_ir_distance <80 && lower_front_ir_distance <75/*&& lower_front_ir_distance <100 old distance*/)
+  if (front_ir_distance>140 && right_ir_distance <80 && left_ir_distance<150 && lower_front_ir_distance <75/*&& lower_front_ir_distance <100 old distance*/)
   {
-   if (obstacle_counter < 2)
+   if (obstacle_counter < 1)
    {
     obstaclePickup();
    }
@@ -366,7 +366,7 @@ void shallowLeftTurn()
   rightMotor.setSpeed(right_motor_speed);
   left_Enc.readAndReset();
 
-  while(distance<30)
+  while(distance<50)
     {
       left_motor_counter = left_Enc.read();
       distance = abs((left_motor_counter*pulses_to_mm));
@@ -411,7 +411,7 @@ void shallowRightTurn()
   rightMotor.setSpeed(right_motor_speed);
   left_Enc.readAndReset();
 
-  while(distance<30)
+  while(distance<50)
     {
       left_motor_counter = left_Enc.read();
 
