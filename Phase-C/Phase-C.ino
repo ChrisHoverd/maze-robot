@@ -32,6 +32,12 @@ CytronMD rightMotor(PWM_DIR, 5, 4); // EN = Pin 5, DIR = 4
 //kp = 2.2, kd=100, ki = 0.00001 turns well but isnt in middle of lane all the time
 //kp = 4, kd = 1, ki = 0 middle ground of turning and staying in middle lane
 
+
+
+ double kp = 5; //best with new weight
+ double kd = 500;
+ double ki = 0;
+ 
 // double kp = 2.2; //best so far with crane
 // double kd = 1000;
 // double ki = 0.00001;
@@ -40,9 +46,13 @@ CytronMD rightMotor(PWM_DIR, 5, 4); // EN = Pin 5, DIR = 4
 // double kd = 100;
 // double ki = 0.00001;
 
- double kp = 2.2; //pretty solid
- double kd = 300;
- double ki = 0.00001;
+// double kp = 2.2; //pretty solid
+// double kd = 500;
+// double ki = 0.00001;
+
+//  double kp = 2.2; //pretty solid
+//  double kd = 300;
+//  double ki = 0.00001;
 
 // double kp = 2.2; //pretty solid
 // double kd = 220;
@@ -65,7 +75,7 @@ volatile double turn_rate;
 volatile double forward_power;
 
 // left wall following PID variables
-double L_desired_distance = 55; //use for right angle IR position
+double L_desired_distance = 45; //use for right angle IR position
 volatile double L_error;
 volatile double L_last_error;
 volatile double L_derivative_error;
@@ -76,7 +86,7 @@ double L_time_now;
 double L_time_prev = 0;
 double L_time_change;
 
-double R_desired_distance = 55; //use for right angle IR position
+double R_desired_distance = 45; //use for right angle IR position
 volatile double R_error;
 volatile double R_last_error;
 volatile double R_derivative_error;
@@ -94,12 +104,6 @@ int front_ir_pin = A1;
 int right_ir_pin = A2;
 int lower_front_ir_pin = A3;
 
-int index = 0;
-int sum = 750;
-#define window_size 5
-int readings [window_size] = {150, 150, 150, 150, 150};
-int averaged = 0;
-
 
 
 //declare IR sampling size and distance
@@ -115,6 +119,7 @@ volatile int right_motor_speed;
 
 int left_turn_counter = 0;
 int right_turn_counter = 0;
+int obstacle_counter = 0;
 
 //time values for printing debugging values
 unsigned long debugging_time_now;
@@ -122,14 +127,22 @@ unsigned long debugging_time_prev = 0;
 unsigned long debugging_time_change;
 
 int obstacleGripperDelay = 10; 
+int slowObstacleGripperDelay = 40; 
 int craneDelay = 40;
 
 int craneBackPos = 0;
 int craneUpPos = 55;
-int craneFrontPos = 145;
+// int craneFrontPos = 145; // fully front
+int craneFrontPos = 140;
+int cranePartlyFrontPos = 100;
 
-int gripperOpenPos = 150;
-int gripperClosePos = 0;
+int gripperOpenPos = 150; // fully open
+// int gripperOpenPos = 60;
+int gripperClosePos = 0; // fully closed
+// int gripperClosePos = 50;
+
+int currentCranePos;
+int currentGripperPos; 
 
 void setup() {
   obstacleGripper.attach(8);
@@ -143,8 +156,11 @@ void setup() {
   delay(2000);
 // for crane, 0 is the 0 degrees position, 55 is 90 degree position, 145 is 180 degrees position (WITHOUT ADDED WEIGHT OF GRIPPER)
 // for gripper, 0 is fully closed grip and 150 is fully open grip.
-  obstacleGripper.write(gripperClosePos); //close gripper
-  crane.write(craneUpPos); //90 degree crane
+  
+  initialCraneMoveUp();
+  delay(1000);
+  slowCloseObstacleGripper();
+  delay(1000);
 
 }
 
@@ -173,46 +189,72 @@ if (debugging_time_now - debugging_time_prev >= 1000)
    right_ir_distance = readIRSensor(right_ir_pin);
    lower_front_ir_distance = readIRSensor(lower_front_ir_pin);
 
-    //normal right turn conditions
-  if (left_ir_distance<60 && front_ir_distance<50 && right_ir_distance>120 /*&& right_turn_counter >= 1*/)
+  // //normal right turn conditions
+  // if (left_ir_distance<60 && front_ir_distance<50 && right_ir_distance>120 && right_turn_counter >= 1)
+  // {
+  //   right_turn_counter++;
+  //   rightTurn();
+  // }
+
+  // //special left turn for left turn counter = 3    PID change
+  // if (right_ir_distance<60 && front_ir_distance<50 && left_ir_distance>120 && left_turn_counter == 3)
+  // {
+  //   left_turn_counter++;
+  //   specialLeftTurn();
+  //   forward(120);
+  // }
+
+  //   //left turn conditions
+  // if (right_ir_distance<60 && front_ir_distance<50 && left_ir_distance>120 && left_turn_counter <=2)
+  // {
+  //   left_turn_counter++;
+  //   leftTurn();
+  // }
+
+
+  // //right wall follow conditions
+  // if(left_turn_counter<4)
+  // {
+  //   rightWallFollowPID();
+  // }
+
+  // //left wall follow conditions
+  // if(left_turn_counter>=4)
+  // {
+  //   leftWallFollowPID();
+  // }
+
+   rightWallFollowPID();
+  //normal obstacle pickup
+  if (front_ir_distance>50 && right_ir_distance <80 && lower_front_ir_distance <75/*&& lower_front_ir_distance <100 old distance*/)
   {
-    right_turn_counter++;
-    rightTurn();
+   if (obstacle_counter < 2)
+   {
+    obstaclePickup();
+   }
+
+  
+  
   }
 
-  if (left_ir_distance<60 && front_ir_distance>50 && right_ir_distance <150 && lower_front_ir_distance <100)
-  {
+}
+
+void obstaclePickup(){
    rightMotor.setSpeed(0);
    leftMotor.setSpeed(0);
    craneMoveFront();
-   forward(60);
-   delay(5000);
-  }
-
-
-
-  Serial.print("Distance in mm ");
-  Serial.println(lower_front_ir_distance);
-  delay(20);
-
-   leftWallFollowPID();
+   craneMoveUp();
+   shallowLeftTurn();
+   craneMovePartlyFront();
+   openObstacleGripper();
+   delay(500);
+   closeObstacleGripper();
+   craneMoveUp();
+   delay(500);
+   shallowRightTurn();
+   delay(500);
+   obstacle_counter++;
 }
-void obstaclePickup()
-{
-  openObstacleGripper();
-  craneMoveFront();
-  closeObstacleGripper();
-  craneMoveUp();
-  rightTurn();
-  craneMoveFront();
-  openObstacleGripper();
-  craneMoveUp();
-  closeObstacleGripper();
-  leftTurn();
-}
-
-
-
 void leftWallFollowPID()
 {
   L_time_now = micros();
@@ -225,7 +267,7 @@ void leftWallFollowPID()
   //Serial.println(derivative_error);
   L_time_prev = L_time_now;
 
-   forward_power = 60;
+  forward_power = 85;
    right_motor_speed = forward_power - turn_rate;
    left_motor_speed = forward_power + turn_rate;
   
@@ -242,6 +284,7 @@ void leftWallFollowPID()
    leftMotor.setSpeed(left_motor_speed);
 }
 
+
 void rightWallFollowPID()
 {
   R_time_now = micros();
@@ -254,7 +297,7 @@ void rightWallFollowPID()
   //Serial.println(derivative_error);
   R_time_prev = R_time_now;
 
-  forward_power = 60;
+  forward_power = 85;
   right_motor_speed = forward_power + turn_rate;
   left_motor_speed = forward_power - turn_rate;
   
@@ -313,6 +356,27 @@ void leftTurn()
   rightMotor.setSpeed(0);
 }
 
+void shallowLeftTurn()
+{ 
+
+  left_motor_speed = -50;
+  right_motor_speed = 50;
+  float distance = 0;
+  leftMotor.setSpeed(left_motor_speed);
+  rightMotor.setSpeed(right_motor_speed);
+  left_Enc.readAndReset();
+
+  while(distance<30)
+    {
+      left_motor_counter = left_Enc.read();
+      distance = abs((left_motor_counter*pulses_to_mm));
+    }
+
+  leftMotor.setSpeed(0);
+  rightMotor.setSpeed(0);
+}
+
+
 //this function makes a right turn
 void rightTurn()
 { 
@@ -336,6 +400,28 @@ void rightTurn()
   rightMotor.setSpeed(0);
 }
 
+//this function makes a shallow right turn
+void shallowRightTurn()
+{ 
+
+  left_motor_speed = 50;
+  right_motor_speed = -50;
+  float distance = 0;
+  leftMotor.setSpeed(left_motor_speed);
+  rightMotor.setSpeed(right_motor_speed);
+  left_Enc.readAndReset();
+
+  while(distance<30)
+    {
+      left_motor_counter = left_Enc.read();
+
+
+      distance = abs((left_motor_counter*pulses_to_mm));
+    }
+
+  leftMotor.setSpeed(0);
+  rightMotor.setSpeed(0);
+}
 //this function makes a 180 degree turn
 void aboutTurn()
 { 
@@ -358,6 +444,51 @@ void aboutTurn()
   leftMotor.setSpeed(0);
   rightMotor.setSpeed(0);
 }
+
+//this function makes a special right turn where it rotates more than 90 degrees
+void specialRightTurn()
+{ 
+
+  left_motor_speed = 50;
+  right_motor_speed = -50;
+  float distance = 0;
+  leftMotor.setSpeed(left_motor_speed);
+  rightMotor.setSpeed(right_motor_speed);
+  left_Enc.readAndReset();
+
+  while(distance<75)
+    {
+      left_motor_counter = left_Enc.read();
+      distance = abs((left_motor_counter*pulses_to_mm));
+    }
+
+  leftMotor.setSpeed(0);
+  rightMotor.setSpeed(0);
+  delay(1000);
+}
+
+//this function performs a special left turn where it rotates less than 90 degrees
+void specialLeftTurn()
+{ 
+
+  left_motor_speed = -50;
+  right_motor_speed = 50;
+  float distance = 0;
+  leftMotor.setSpeed(left_motor_speed);
+  rightMotor.setSpeed(right_motor_speed);
+  left_Enc.readAndReset();
+
+  while(distance<60)
+    {
+      left_motor_counter = left_Enc.read();
+      distance = abs((left_motor_counter*pulses_to_mm));
+    }
+
+  leftMotor.setSpeed(0);
+  rightMotor.setSpeed(0);
+  delay(4000);
+}
+
 float readIRSensor(int ir_pin)
 {
 
@@ -375,17 +506,32 @@ float readIRSensor(int ir_pin)
   ir_average_val = ir_sum/sensor_sample;
   ir_distance = (478.49*(pow(ir_average_val,-0.866)))*10; //analog to mm function
   if (ir_distance>150) ir_distance = 150;
-//  sum = sum - readings[index];
-//  readings[index] = ir_distance;
-//  sum = sum + ir_distance;
-//  index = (index + 1) % window_size;
-//  averaged = sum / window_size;
-//  return averaged;
     return ir_distance;
 }
 
 // int craneBack = 0   ,   int craneUp = 55 , int craneFront = 145
 void craneMoveUp()
+{
+  currentCranePos = crane.read();
+  if (currentCranePos >= craneUpPos)
+  {
+    for(int i = currentCranePos; i >= craneUpPos; i--)
+    {
+      crane.write(i);
+      delay(craneDelay);
+    }
+  }
+  else
+  {
+    for(int i = currentCranePos; i <= craneUpPos; i++)
+    {
+      crane.write(i);
+      delay(craneDelay);
+    }
+  }
+}
+
+void initialCraneMoveUp()
 {
   for(int i = craneFrontPos; i >= craneUpPos; i--)
   {
@@ -396,29 +542,127 @@ void craneMoveUp()
 
 void craneMoveFront()
 {
-  for(int i = craneUpPos; i <= craneFrontPos; i++)
+  currentCranePos = crane.read();
+  if (currentCranePos >= craneFrontPos)
   {
-    crane.write(i);
-    delay(craneDelay);
+    for(int i = currentCranePos; i >= craneFrontPos; i--)
+    {
+      crane.write(i);
+      delay(craneDelay);
+    }
+  }
+  else
+  {
+    for(int i = currentCranePos; i <= craneFrontPos; i++)
+    {
+      crane.write(i);
+      delay(craneDelay);
+    }
   }
 }
+
+void craneMovePartlyFront()
+{
+  currentCranePos = crane.read();
+  if (currentCranePos >= cranePartlyFrontPos)
+  {
+    for(int i = currentCranePos; i >= cranePartlyFrontPos; i--)
+    {
+      crane.write(i);
+      delay(craneDelay);
+    }
+  }
+  else
+  {
+    for(int i = currentCranePos; i <= cranePartlyFrontPos; i++)
+    {
+      crane.write(i);
+      delay(craneDelay);
+    }
+  }
+}
+
 
 //int gripperOpenPos = 150     int gripperClosePos = 0
 
 void openObstacleGripper()
 {
-    for(int i = gripperClosePos; i <= gripperOpenPos; i++)
+  currentGripperPos = obstacleGripper.read();
+  if (currentGripperPos >= gripperOpenPos)
   {
-    obstacleGripper.write(i);
-    delay(obstacleGripperDelay);
+    for(int i = currentGripperPos; i >= gripperOpenPos; i--)
+    {
+      obstacleGripper.write(i);
+      delay(obstacleGripperDelay);
+    }
+  }
+  else
+  {
+    for(int i = currentGripperPos; i <= gripperOpenPos; i++)
+    {
+      obstacleGripper.write(i);
+      delay(obstacleGripperDelay);
+    }
   }
 }
 
 void closeObstacleGripper()
-{
-    for(int i = gripperOpenPos; i >= gripperClosePos; i--)
+{ 
+  currentGripperPos = obstacleGripper.read();
+  if (currentGripperPos >= gripperClosePos)
   {
-    obstacleGripper.write(i);
-    delay(obstacleGripperDelay);
+    for(int i = currentGripperPos; i >= gripperClosePos; i--)
+    {
+      obstacleGripper.write(i);
+      delay(obstacleGripperDelay);
+    }
   }
+  else
+  {
+    for(int i = currentGripperPos; i <= gripperClosePos; i++)
+    {
+      obstacleGripper.write(i);
+      delay(obstacleGripperDelay);
+    }
+  }
+}
+
+void slowCloseObstacleGripper()
+{
+  currentGripperPos = obstacleGripper.read();
+  if (currentGripperPos >= gripperClosePos)
+  {
+    for(int i = currentGripperPos; i >= gripperClosePos; i--)
+    {
+      obstacleGripper.write(i);
+      delay(slowObstacleGripperDelay);
+    }
+  }
+  else
+  {
+    for(int i = currentGripperPos; i <= gripperClosePos; i++)
+    {
+      obstacleGripper.write(i);
+      delay(slowObstacleGripperDelay);
+    }
+  }
+}
+
+void wallFollowSetDis(int distance_to_travel)
+{
+  float distance = 0;
+  left_Enc.readAndReset();
+
+  while(distance < distance_to_travel)
+    {
+      left_motor_counter = left_Enc.read();
+      left_ir_distance = readIRSensor(left_ir_pin);
+      right_ir_distance = readIRSensor(right_ir_pin);
+      rightWallFollowPID();
+      distance = abs((left_motor_counter*pulses_to_mm));
+      delay(40);
+    }
+
+  leftMotor.setSpeed(0);
+  rightMotor.setSpeed(0);
 }
