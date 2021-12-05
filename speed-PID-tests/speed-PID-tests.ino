@@ -21,10 +21,39 @@ volatile long last_lw_counter = 0;
 volatile long lw_counter = 0;
 volatile long lw_counter_change;
 
-//declare left ir sensor distance PID constants and error values
-double kp = 2.2;
-double kd = 300;
+//declare left ir sensor PID constants and error values
+
+// kp = 2, kd = 75, ki = 0, most usable so far
+
+// double kp = 2.2; 
+// double kd = 1000;
+// double ki = 0.00001;
+
+// double kp = 1.5; // most usable
+// double kd = 20;
+// double ki = 0;
+
+// double kp = 2.2; 
+// double kd = 450;
+// double ki = 0.00001;
+
+// double kp = 2.2; 
+// double kd = 100;
+// double ki = 0.00001;
+
+// double kp = 4; 
+// double kd = 1;
+// double ki = 0;
+
+// double kp = 2;
+// double kd = 0.5;
+// double ki = 0;
+
+
+double kp = 2.2; 
+double kd = 1000;
 double ki = 0.00001;
+
 double desired_distance = 45;
 volatile double error;
 volatile double last_error;
@@ -40,7 +69,7 @@ double time_change;
 
 //declare left wheel speed PID variables
 int lw_kp = 1;
-int lw_kd = 0;
+int lw_kd = 0.00001;
 int lw_ki = 0;
 double lw_error;
 double lw_derivative_error;
@@ -50,7 +79,7 @@ double lw_pwm;
 
 //declare right wheel speed PID variables
 int rw_kp = 1;
-int rw_kd = 0;
+int rw_kd = 0.00001;
 int rw_ki = 0;
 double rw_error;
 double rw_derivative_error;
@@ -78,7 +107,7 @@ CytronMD rightMotor(PWM_DIR, 5, 4); // EN = Pin 5, DIR = 4
 double lw_speed;
 double rw_speed;
 
-double speed;
+double turn_speed;
 
 //time values for left wheel speed PID
 unsigned long lw_time_now;
@@ -117,15 +146,16 @@ wallFollowPID();
 //Serial.print(" derivative error: ");
 //Serial.println(derivative_error);
 
+//sets boundaries on the PWM to speed conversion function within the domain of where it applies
 if(turn_rate>255)  turn_rate = 255;
 if(turn_rate<-255) turn_rate = -255;
 
 pwmToSpeed();
 
 
-forward_speed = 45;
-rw_speed = forward_speed - speed;
-lw_speed = forward_speed + speed;
+forward_speed = 30;
+rw_speed = forward_speed - turn_speed;
+lw_speed = forward_speed + turn_speed;
 rightWheelSpeedPID(rw_speed);
 leftWheelSpeedPID(lw_speed);
 
@@ -171,8 +201,8 @@ float readIRSensor(int ir_pin)
 // it determines the turn_rate 
 void wallFollowPID()
 {
-  time_now = micros();
-  time_change = (float)(time_now - time_prev)/1000;
+  time_now = millis();
+  time_change = (float)(time_now - time_prev);
   error = desired_distance - left_ir_distance;
   derivative_error = (error - last_error)/time_change;
   last_error = error;
@@ -187,27 +217,27 @@ void pwmToSpeed()
   if(turn_rate>0)
   {
     //speed = 5.09 + (2*turn_rate) - (pow(4.56,-3) * pow(turn_rate,2));old speed function
-    speed = -133 + (6.42 * turn_rate) - (0.0492 * (pow(turn_rate,2))) + ((1.76 * pow(10, -4)) * (pow(turn_rate,3))) - (2.35*(pow(10,-7)) * (pow(turn_rate, 4)));
+    turn_speed = -133 + (6.42 * turn_rate) - (0.0492 * (pow(turn_rate,2))) + ((1.76 * pow(10, -4)) * (pow(turn_rate,3))) - (2.35*(pow(10,-7)) * (pow(turn_rate, 4)));
   }
   if(turn_rate<0)
   {
     //speed = -5.09 + (2*turn_rate) + (pow(4.56,-3) * pow(turn_rate,2)); old speed function
-    speed = 133 + (6.42 * turn_rate) + (0.0492 * pow(turn_rate,2)) + ((1.76 * pow(10, -4)) * (pow(turn_rate,3))) + (2.35*(pow(10,-7)) * (pow(turn_rate, 4)));
+    turn_speed = 133 + (6.42 * turn_rate) + (0.0492 * pow(turn_rate,2)) + ((1.76 * pow(10, -4)) * (pow(turn_rate,3))) + (2.35*(pow(10,-7)) * (pow(turn_rate, 4)));
   }
 
 }
 
 void leftWheelSpeedPID(double desired_speed)
 {
-  double desired_left_wheel_speed = desired_speed;
-  lw_time_now = micros();
-  lw_time_change = (float)(lw_time_now - lw_time_prev)/1000;
+  double desired_lw_speed = desired_speed;
+  lw_time_now = millis();
+  lw_time_change = (float)(lw_time_now - lw_time_prev);
   lw_counter = left_Enc.read();
   lw_counter_change = lw_counter - last_lw_counter;
   last_lw_counter = lw_counter;
   double lw_distance = lw_counter_change*pulses_to_mm;
   double lw_speed = (lw_distance/lw_time_change)*1000;
-  lw_error = desired_left_wheel_speed - lw_speed;
+  lw_error = desired_lw_speed - lw_speed;
   lw_derivative_error = (lw_error - last_lw_error)/lw_time_change;
   last_lw_error = lw_error;
   lw_integral_error += (lw_error*lw_time_change);
@@ -217,8 +247,8 @@ void leftWheelSpeedPID(double desired_speed)
 void rightWheelSpeedPID(double desired_speed)
 { 
   double desired_rw_speed = desired_speed;
-  rw_time_now = micros();
-  rw_time_change = (float)(rw_time_now - rw_time_prev)/1000;
+  rw_time_now = millis();
+  rw_time_change = (float)(rw_time_now - rw_time_prev);
   rw_counter = right_Enc.read();
   rw_counter_change = rw_counter - last_rw_counter;
   last_rw_counter = rw_counter;

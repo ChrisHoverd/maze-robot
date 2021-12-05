@@ -7,7 +7,7 @@
 #include <SharpDistSensor.h>
 
 //change ir pin to A0, A1, or A2 depending on IR sensor
-int ir_pin = A2;
+int ir_pin = A3;
 int ir_val = 0;
 
 //declare sample size value and sum values used for averaging readings
@@ -72,8 +72,8 @@ void loop() {
   average_sensor_val = sensor_sum/sensor_sample;
 
   //print the average sensor value on the serial monitor for troubleshooting
-  Serial.print("Sensor Value: ");
-  Serial.println(average_sensor_val);
+//  Serial.print("Sensor Value: ");
+//  Serial.println(average_sensor_val);
 
   //analog value to distance in cm function
   //distance = -0.0903*average_sensor_val + 65.306; //GP2Y0E02A (Phase A) IR sensor function
@@ -81,12 +81,12 @@ void loop() {
   //print distance value on serial monitor for troubleshooting
   Serial.print("Distance in cm: ");
   Serial.println(distance); 
-
+  
   //set the sum to 0
   sensor_sum = 0;
 
   //delay 2 seconds
-  delay(2000);
+  delay(100);
 
 
 
@@ -104,4 +104,3 @@ void loop() {
   // // Wait some time
   // delay(2000);
 }
-
