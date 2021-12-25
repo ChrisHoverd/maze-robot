@@ -1,10 +1,20 @@
 
-# Maze Solving Robot
+# Maze-Solving SARbot (Search and Rescue Robot)
 
-This project was developed for Ontario Tech University Mechatronics Design ME4100U course. 
+This project was developed as a part of the Mechatronics Design ME4100U course at Ontario Tech University.
 
-## Components
+## Program Descriptions
 
+### Phase A (Phase-A.ino)
+This was the program used in the Phase A demonstration. It simply usesd the encoder counts to determine
+how much distance it had travelled. Using the map provided beforehand, the straightaways and left/right
+turns were hardcoded into the robots path by determining distance travelled. Although not ideal, this was 
+done as this program provided better results than the wall-following and turn counting logic developed at 
+the time of the demo presentation.
+
+#### Phase A Components
+
+Arduino Mega                                                                   x 1 \
 DC-DC Power Module 25W (DFR0205)                                               x 1 \
 0.8Amp 5V-26V DC Motor Driver Shield for Arduino (2 Channels) (SHIELD-2AMOTOR) x 1 \
 DF Robot Motor Kit w/ Encoders                                                 x 1 \
@@ -12,38 +22,40 @@ GOLDBAT 1500mAh 11.1V 100C 3S Lipo Battery                                     x
 Ball Transfer Bearing                                                          x 1 \
 Sharp GP2Y0E02A Infrared Sensors                                               x 2 \
 TowerPro Micro Servo Motor                                                     x 1 \
-Various Wiring and Connectors                                                  x 1
+Various Wiring and Connectors                                                  
 
-## Program Descriptions
-For the Phase A demonstration, *hardcoded-phaseA.ino* was used, however, many other programs were
-developed to calibrate sensors, troubleshoot algorithims, and to develop the overall solution. 
+#### Phase B (Phase-B.ino)
+This was the program used in the Phase B demonstration. It integrated a PID wall-following control system
+with turn-counting logic to find its way to the trapped miner.
 
-### hardcoded-phaseA.ino
-This was the program used in the Phase A demonstration. The reason it's called *hardcoded*
-is because it is not doing any wall following. It simply uses the encoder counts to determine
-how much distance it has travelled. Using the map provided beforehand, the straightaways and left/right
-turns were programmed. Although not ideal, this was done as this program provided better results than the 
-wall following *PID-tests.ino* program at the time of the Phase A demonstration.
+#### Phase B Components
 
-#### main.ino
-This is the main program where all the other programs will be integrated into. The wall following PID 
-and wheel odometry will be integrated into this program. As it stands, this program has the same
-PID algorithim as *PID-tests.ino*, which does not provide good results. This program also incorporates
-the use of a timer interrupt. The interrupt is triggered every 100 ms where the PID and wheel odometry
-algorithims are executed. This allows the program to work in a less sequential and more autonomous way.
+Arduino Leonardo                                                               x 1 \
+DC-DC Power Module 25W (DFR0205)                                               x 1 \
+0.8Amp 5V-26V DC Motor Driver Shield for Arduino (2 Channels) (SHIELD-2AMOTOR) x 1 \
+6V 210:1 75 RPM Micro Motors                                                   x 2 \
+Tattu 3S1P 75C 11.1V 650mAh Lipo Battery                                       x 1 \
+Ball Transfer Bearing                                                          x 1 \
+Sharp GP2Y0A51SK0F Analog Distance Sensor 2-15cm                               x 3 \
+TowerPro Micro Servo Motor                                                     x 1 \
+Pololu Wheel 60×8mm                                                            x 2 \
+Various Wiring and Connectors     
 
-### PID-tests.ino
-This program is where development of the wall following PID was done. It is the same PID that was put into *main.ino*.
-Development of the wall following PID is done in this program before it is integrated into others.
+### Phase C (Phase-C.ino)
+This was the program used in the Phase C demonstration. The main difference between Phase C and Phase B
+was that Phase C included obstacles. To remove the obstacles from the path, a crane with a gripper at the 
+end of it was used. All other wall following and turn-counting logic was the same as Phase B. 
 
-### counter_to_mm_test.ino
-The main use of this code is to obtain encoder values to create a Millimeter/Encoder count conversion.
-With this conversion, it is possible to determine distance travelled from the encoder count.
+#### Phase C Components
 
-### encoder-tests.ino
-The main purpose of this code is to test encoder readings and troubleshoot. This code was adapted from the Encoder.h "Basic" 
-example.
-
-### ir-tests.ino
-The main function of this program is to test the functionality of the IR Sensor and to gain data to plot a 
-graph relating analog readings and distance.
+Arduino Leonardo                                                               x 1 \
+DC-DC Power Module 25W (DFR0205)                                               x 1 \
+0.8Amp 5V-26V DC Motor Driver Shield for Arduino (2 Channels) (SHIELD-2AMOTOR) x 1 \
+6V 210:1 75 RPM Micro Motors                                                   x 2 \
+Tattu 3S1P 75C 11.1V 650mAh Lipo Battery                                       x 1 \
+Ball Transfer Bearing                                                          x 1 \
+Sharp GP2Y0A51SK0F Analog Distance Sensor 2-15cm                               x 4 \
+TowerPro Micro Servo Motor                                                     x 1 \
+Radio Shack Servo Motor                                                        x 1 \
+Pololu Wheel 60×8mm                                                            x 2 \
+Various Wiring and Connectors     
