@@ -24,7 +24,7 @@ Sharp GP2Y0E02A Infrared Sensors                                               x
 TowerPro Micro Servo Motor                                                     x 1 \
 Various Wiring and Connectors                                                  
 
-#### Phase B (Phase-B.ino)
+### Phase B (Phase-B.ino)
 This was the program used in the Phase B demonstration. It integrated a PID wall-following control system
 with turn-counting logic to find its way to the trapped miner.
 
